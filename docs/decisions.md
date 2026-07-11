@@ -31,6 +31,28 @@ here at that time.
 |                         |           | chosen for maturity and documentation stability   |
 | PostgreSQL              | 17-alpine | Official multi-arch image; native arm64           |
 
+## Pinned at M3 (auth + validation + tests)
+
+| Tool / library  | Version | Notes                                              |
+| --------------- | ------- | -------------------------------------------------- |
+| zod             | 4.4.3   | Shared client/server validation schemas            |
+| react-hook-form | 7.81.0  | Complex forms only, with @hookform/resolvers 5.4.0 |
+| @node-rs/argon2 | 2.0.2   | Argon2id, prebuilt arm64 binaries (no node-gyp)    |
+| vitest          | 4.1.10  | Unit + integration projects (v4 is current stable) |
+
+Additional M3 decisions:
+
+- **Hand-rolled DB sessions** (no Auth.js/Lucia): 32-byte random token in an httpOnly
+  SameSite=Lax cookie; the database stores only the SHA-256 hash; 30-day expiry with sliding
+  renewal below 15 days. Rationale: external providers are forbidden, and the mechanics are the
+  point of a learning repo. Design details in `docs/auth.md` (written at M15).
+- **Origin-header validation** on every POST/PUT/PATCH/DELETE, enforced centrally in the
+  `apiRoute` wrapper so no endpoint can forget it (CSRF defense in depth with SameSite=Lax).
+- **Next 16 `proxy.ts`** (the renamed middleware) does optimistic cookie-presence redirects
+  only; real auth checks live in layouts and API guards, which validate against the database.
+- **`forbidden()`/`unauthorized()` file conventions not used** — still experimental in Next 16
+  (`authInterrupts`); we use a plain `/403` page instead.
+
 Additional M1 decisions:
 
 - **Two databases in one container**: `shopops` (dev) plus `shopops_test`, created by an init

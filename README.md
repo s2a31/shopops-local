@@ -33,10 +33,10 @@ The app runs at http://localhost:3000.
 > published in this README on purpose. They are not secrets and grant access to nothing outside
 > your own machine.
 
-| Role          | Email                   | Password           |
-| ------------- | ----------------------- | ------------------ |
-| Administrator | `admin@shopops.local`   | `DemoAdmin123!`    |
-| Customer      | `customer@shopops.local`| `DemoCustomer123!` |
+| Role          | Email                    | Password           |
+| ------------- | ------------------------ | ------------------ |
+| Administrator | `admin@shopops.local`    | `DemoAdmin123!`    |
+| Customer      | `customer@shopops.local` | `DemoCustomer123!` |
 
 The seed also creates four more demo customers (`mia`, `daniel`, `zoe`, `adam`
 `@shopops.local`, password `DemoCustomer123!`) with order history so the admin

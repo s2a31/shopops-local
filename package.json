@@ -10,6 +10,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run --project unit",
+    "test:watch": "vitest --project unit",
+    "test:integration": "vitest run --project integration",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose stop",
     "db:destroy": "docker compose down -v",
@@ -23,11 +26,14 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "5.4.0",
     "@node-rs/argon2": "2.0.2",
     "@prisma/client": "6.19.3",
     "next": "16.2.10",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "7.81.0",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.2",
@@ -41,6 +47,7 @@
     "prisma": "6.19.3",
     "tailwindcss": "4.3.2",
     "tsx": "4.23.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
   }
 }
