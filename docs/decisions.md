@@ -82,6 +82,25 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M10 (admin catalogue) — no new dependencies
+
+Additional M10 decisions:
+
+- **Slug stability**: renaming a product or category never changes its slug; the slug
+  changes only when the admin edits the slug field deliberately (hint text says so in
+  both forms). Slugs derive from names via NFKD normalization with all combining marks
+  (`\p{M}`) stripped; names with no ASCII decomposition require an explicit slug.
+- **Prices are typed in euros** ("79.90" or "79,90") and converted to integer cents at
+  the Zod boundary of the form schema — the wire and everything behind it stay integral.
+- **The image picker lists `public/images/products/` at request time** (`fs.readdir` in
+  a server page) instead of a committed manifest, so newly generated artwork appears
+  without a code change. The wire schema still rejects anything outside that folder.
+- **Product stock is read-only in the edit form** — it changes only through audited
+  inventory adjustments (M11); the create form's initial stock writes an
+  `INITIAL_STOCK` ledger entry attributed to the acting admin.
+- **Categories are managed in dialogs** on one page (list + create + edit); no
+  category delete in v1, as planned.
+
 ## M9 (admin shell + dashboard) — no new dependencies
 
 Additional M9 decisions:

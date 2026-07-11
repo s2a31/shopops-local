@@ -66,3 +66,42 @@ export const adminProductUpdateSchema = productFields.partial();
 
 export type AdminProductCreateInput = z.infer<typeof adminProductCreateSchema>;
 export type AdminProductUpdateInput = z.infer<typeof adminProductUpdateSchema>;
+
+/**
+ * The admin form's price field: euros as typed ("79.90" or "79,90") converted
+ * to integer cents at the validation boundary — money math stays integral
+ * everywhere past this point.
+ */
+const priceEurosField = z
+  .string()
+  .trim()
+  .min(1, "Enter a price.")
+  .regex(/^\d+([.,]\d{1,2})?$/, "Use a price like 79.90 with at most two decimals.")
+  .transform((value) => Math.round(Number(value.replace(",", ".")) * 100))
+  .refine((cents) => cents >= 1, "The price must be at least €0.01.")
+  .refine((cents) => cents <= 10_000_000, "The price cannot exceed €100,000.");
+
+/** What the product form validates; distinct from the wire schemas above. */
+export const adminProductFormSchema = z.object({
+  name: productFields.shape.name,
+  slug: z
+    .string()
+    .trim()
+    .regex(/^$|^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, digits and hyphens.")
+    .max(80)
+    .transform((value) => (value === "" ? undefined : value)),
+  description: productFields.shape.description,
+  price: priceEurosField,
+  categoryId: productFields.shape.categoryId,
+  images: z.array(productImageSchema).max(4),
+  isActive: z.boolean(),
+  lowStockThreshold: z.coerce.number<number>().int().min(0, "Cannot be negative.").max(1_000),
+  initialStock: z.coerce
+    .number<number>()
+    .int("Whole units only.")
+    .min(0, "Stock cannot be negative.")
+    .max(100_000),
+});
+
+export type AdminProductFormInput = z.input<typeof adminProductFormSchema>;
+export type AdminProductFormValues = z.output<typeof adminProductFormSchema>;
