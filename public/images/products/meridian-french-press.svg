@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="hsl(39 60% 92%)"/>
+      <stop offset="1" stop-color="hsl(39 45% 82%)"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect x="-59" y="6" width="99" height="84" rx="24"
+        fill="hsl(118 45% 62%)" opacity="0.85"
+        transform="rotate(-50 -9.5 48)"/>
+  <circle cx="17" cy="26" r="56" fill="hsl(39 55% 52%)" opacity="0.9"/>
+  <circle cx="701" cy="105" r="16" fill="none"
+          stroke="hsl(118 50% 96%)" stroke-width="14" opacity="0.9"/>
+  <circle cx="359" cy="65.5" r="14"
+          fill="hsl(118 55% 30%)" opacity="0.7"/>
+</svg>
