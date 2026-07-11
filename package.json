@@ -14,10 +14,16 @@
     "db:down": "docker compose stop",
     "db:destroy": "docker compose down -v",
     "db:migrate": "prisma migrate dev",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:reset": "pnpm db:destroy && pnpm db:up && pnpm db:migrate"
+    "db:reset": "pnpm db:destroy && pnpm db:up && pnpm db:migrate && pnpm db:seed",
+    "images:generate": "tsx scripts/generate-product-images.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.0.2",
     "@prisma/client": "6.19.3",
     "next": "16.2.10",
     "react": "19.2.4",
@@ -34,6 +40,7 @@
     "prettier": "3.9.5",
     "prisma": "6.19.3",
     "tailwindcss": "4.3.2",
+    "tsx": "4.23.0",
     "typescript": "5.9.3"
   }
 }
