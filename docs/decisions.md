@@ -55,15 +55,35 @@ Additional M3 decisions:
 
 ## Pinned at M4 (UI kit)
 
-| Tool / library                  | Version | Notes                                          |
-| ------------------------------- | ------- | ---------------------------------------------- |
-| radix-ui (unified package)      | 1.6.2   | Primitives behind the vendored components      |
-| lucide-react                    | 1.24.0  | Icon set used by the vendored components       |
-| sonner                          | 2.0.7   | Toast notifications (see note below)           |
-| class-variance-authority        | 0.7.1   | Variant styling in vendored components         |
-| clsx / tailwind-merge           | 2.1.1 / 3.6.0 | `cn()` helper                            |
-| tw-animate-css / next-themes    | 1.4.0 / 0.4.6 | Animation utilities; theme hook sonner needs |
-| shadcn (devDependency)          | 4.13.0  | Build-time only: `@import "shadcn/tailwind.css"` provides keyframes/variants for the vendored components. Never a runtime dependency. |
+| Tool / library               | Version       | Notes                                                                                                                                 |
+| ---------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| radix-ui (unified package)   | 1.6.2         | Primitives behind the vendored components                                                                                             |
+| lucide-react                 | 1.24.0        | Icon set used by the vendored components                                                                                              |
+| sonner                       | 2.0.7         | Toast notifications (see note below)                                                                                                  |
+| class-variance-authority     | 0.7.1         | Variant styling in vendored components                                                                                                |
+| clsx / tailwind-merge        | 2.1.1 / 3.6.0 | `cn()` helper                                                                                                                         |
+| tw-animate-css / next-themes | 1.4.0 / 0.4.6 | Animation utilities; theme hook sonner needs                                                                                          |
+| shadcn (devDependency)       | 4.13.0        | Build-time only: `@import "shadcn/tailwind.css"` provides keyframes/variants for the vendored components. Never a runtime dependency. |
+
+## Pinned at M5 (catalogue + component tests)
+
+| Tool / library              | Version | Notes                                   |
+| --------------------------- | ------- | --------------------------------------- |
+| @testing-library/react      | 16.3.2  | Component tests                         |
+| @testing-library/user-event | 14.6.1  | Interaction simulation                  |
+| @testing-library/jest-dom   | 6.9.1   | DOM matchers (vitest setup)             |
+| happy-dom                   | 20.10.6 | Component-test DOM environment          |
+| @vitejs/plugin-react        | 6.0.3   | JSX transform for the component project |
+
+Additional M5 decisions:
+
+- **Catalogue filtering is a plain GET form + URL state** — server-rendered, shareable,
+  back-button-safe, and fully functional without client JavaScript. TanStack Query is
+  deliberately not used here.
+- **Prices in URLs are whole euros** (`?minPrice=10`) for readability; converted to cents at
+  the service boundary. Blank form fields are treated as "no filter" (a Zod `preprocess`
+  guards against `""` coercing to `0`).
+- **Page-overflow clamps to the last page** instead of showing an empty page.
 
 Additional M4 decisions:
 
