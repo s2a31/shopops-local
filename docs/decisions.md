@@ -53,6 +53,30 @@ Additional M3 decisions:
 - **`forbidden()`/`unauthorized()` file conventions not used** — still experimental in Next 16
   (`authInterrupts`); we use a plain `/403` page instead.
 
+## Pinned at M4 (UI kit)
+
+| Tool / library                  | Version | Notes                                          |
+| ------------------------------- | ------- | ---------------------------------------------- |
+| radix-ui (unified package)      | 1.6.2   | Primitives behind the vendored components      |
+| lucide-react                    | 1.24.0  | Icon set used by the vendored components       |
+| sonner                          | 2.0.7   | Toast notifications (see note below)           |
+| class-variance-authority        | 0.7.1   | Variant styling in vendored components         |
+| clsx / tailwind-merge           | 2.1.1 / 3.6.0 | `cn()` helper                            |
+| tw-animate-css / next-themes    | 1.4.0 / 0.4.6 | Animation utilities; theme hook sonner needs |
+| shadcn (devDependency)          | 4.13.0  | Build-time only: `@import "shadcn/tailwind.css"` provides keyframes/variants for the vendored components. Never a runtime dependency. |
+
+Additional M4 decisions:
+
+- **Vendored components** via the shadcn CLI (`radix-nova` preset): 16 components copied into
+  `src/components/ui/` and owned by this repo — no runtime UI-kit dependency to chase.
+- **Sonner instead of raw Radix Toast** for notifications: shadcn's current toast primitive is
+  sonner (accessible, announced via live region); one small dependency replaces a hand-rolled
+  toast system.
+- **Native `<select>`/inputs for storefront filters** (upcoming M5) rather than Radix Select —
+  native controls are the right tool for a plain GET filter form.
+- The CLI tried to reintroduce Google-font Geist; reverted to keep the offline-build guarantee
+  from M0.
+
 Additional M1 decisions:
 
 - **Two databases in one container**: `shopops` (dev) plus `shopops_test`, created by an init
