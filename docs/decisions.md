@@ -82,6 +82,19 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M8 (customer orders) — no new dependencies
+
+Additional M8 decisions:
+
+- **Cancellation flips the order status with a conditional update**
+  (`WHERE status = 'PLACED'`) inside the transaction, so a concurrent cancel or admin
+  transition can never restore stock twice. Stock restores use the same deterministic
+  productId ordering as checkout decrements.
+- **Cancelled COD orders keep payment status PENDING** — nothing was ever paid. Only paid
+  simulated-card payments flip to REFUNDED.
+- **Order history clamps page overflow to the last page**, matching the catalogue's
+  behavior from M5.
+
 ## M7 (checkout) — no new dependencies
 
 Additional M7 decisions:
