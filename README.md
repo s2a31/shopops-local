@@ -18,11 +18,14 @@ reasonably lean modular monolith.
 
 ```bash
 pnpm install
+cp .env.example .env   # local-only defaults; no real secrets anywhere
+pnpm db:up             # start PostgreSQL in Docker (waits for healthy)
+pnpm db:migrate        # apply database migrations
 pnpm dev
 ```
 
-The app runs at http://localhost:3000. Database setup, seed data, and demo credentials will be
-documented here as those milestones land.
+The app runs at http://localhost:3000. Seed data and demo credentials will be documented here
+when that milestone lands.
 
 ## Commands
 
@@ -35,6 +38,12 @@ documented here as those milestones land.
 | `pnpm format`       | Format with Prettier         |
 | `pnpm format:check` | Verify formatting            |
 | `pnpm typecheck`    | TypeScript type-check        |
+| `pnpm db:up`        | Start PostgreSQL (Docker)    |
+| `pnpm db:down`      | Stop PostgreSQL (keeps data) |
+| `pnpm db:destroy`   | Remove container + volume    |
+| `pnpm db:migrate`   | Apply Prisma migrations      |
+| `pnpm db:reset`     | Destroy, restart, remigrate  |
+| `pnpm db:studio`    | Open Prisma Studio           |
 
 ## AI-generated project disclosure
 

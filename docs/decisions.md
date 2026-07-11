@@ -19,9 +19,28 @@ no opportunistic upgrades happen during v1 implementation.
 | Prettier          | 3.9.5   | With `eslint-config-prettier` 10.1.8 (disables conflicts) |
 | @types/node       | 22.20.1 | Matches the Node 22 runtime                               |
 
-Versions for later-milestone dependencies (Prisma, Zod, TanStack Query, Zustand, RHF, Radix,
-Vitest, Playwright, `@node-rs/argon2`, …) are pinned in the milestone that introduces them and
-recorded here at that time.
+Versions for later-milestone dependencies (Zod, TanStack Query, Zustand, RHF, Radix, Vitest,
+Playwright, `@node-rs/argon2`, …) are pinned in the milestone that introduces them and recorded
+here at that time.
+
+## Pinned at M1 (database)
+
+| Tool / library          | Version   | Notes                                             |
+| ----------------------- | --------- | ------------------------------------------------- |
+| Prisma / @prisma/client | 6.19.3    | Prisma 7 was newly released at project start; 6.x |
+|                         |           | chosen for maturity and documentation stability   |
+| PostgreSQL              | 17-alpine | Official multi-arch image; native arm64           |
+
+Additional M1 decisions:
+
+- **Two databases in one container**: `shopops` (dev) plus `shopops_test`, created by an init
+  script in `docker/postgres-init/`. Tests never touch the dev database.
+- **DB-level stock guard**: the initial migration adds a raw-SQL
+  `CHECK ("stockQuantity" >= 0)` on `Product` — negative inventory is impossible even if
+  application-level checks regress.
+- **`order_number_seq` sequence** backs human-readable order numbers (`SO-001042`); generated
+  in the checkout transaction, not by a column default, because the `SO-` prefix formatting
+  lives in application code.
 
 ## Decisions made at M0
 

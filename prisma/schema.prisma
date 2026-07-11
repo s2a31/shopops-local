@@ -1,0 +1,194 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PLACED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  SIMULATED_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REFUNDED
+}
+
+enum InventoryReason {
+  INITIAL_STOCK
+  RESTOCK
+  MANUAL_CORRECTION
+  ORDER_PLACED
+  ORDER_CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  /// Stored lowercase; uniqueness is case-insensitive by normalization at the service layer.
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         Role     @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions             Session[]
+  orders               Order[]
+  inventoryAdjustments InventoryAdjustment[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  /// SHA-256 hash of the random session token; the raw token exists only in the user's cookie.
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String
+  /// Integer minor units (EUR cents). Never a float.
+  priceCents        Int
+  /// Guarded by a raw-SQL CHECK (stock_quantity >= 0) in the initial migration.
+  stockQuantity     Int      @default(0)
+  lowStockThreshold Int      @default(5)
+  isActive          Boolean  @default(true)
+  categoryId        String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  category             Category              @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images               ProductImage[]
+  orderItems           OrderItem[]
+  inventoryAdjustments InventoryAdjustment[]
+
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([priceCents])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  /// Local path under public/, e.g. /images/products/espresso-maker.svg
+  url       String
+  altText   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sortOrder])
+}
+
+model Order {
+  id          String        @id @default(cuid())
+  /// Human-readable unique number, e.g. SO-001042 (from the order_number_seq sequence).
+  orderNumber String        @unique
+  userId      String
+  status      OrderStatus   @default(PLACED)
+
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  /// Fictional reference like SIM-a1b2c3 for simulated card payments.
+  paymentRef    String?
+
+  subtotalCents Int
+  shippingCents Int
+  totalCents    Int
+
+  // Shipping address snapshot: orders stay historically correct even if the
+  // customer later changes their details.
+  shippingName       String
+  shippingPhone      String?
+  shippingStreet     String
+  shippingCity       String
+  shippingPostalCode String
+  shippingCountry    String
+
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Restrict)
+  items                OrderItem[]
+  inventoryAdjustments InventoryAdjustment[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  orderId   String
+  productId String
+
+  // Snapshots taken at purchase time; later product edits never affect past orders.
+  productName    String
+  unitPriceCents Int
+  quantity       Int
+  lineTotalCents Int
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, productId])
+  @@index([productId])
+}
+
+model InventoryAdjustment {
+  id          String          @id @default(cuid())
+  productId   String
+  /// Signed change; a product's stockQuantity always equals the sum of its deltas.
+  delta       Int
+  reason      InventoryReason
+  orderId     String?
+  /// Admin who made a manual adjustment; null for system-driven changes (checkout, cancellation).
+  actorUserId String?
+  note        String?
+  createdAt   DateTime        @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  order   Order?  @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  actor   User?   @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([productId, createdAt])
+}
