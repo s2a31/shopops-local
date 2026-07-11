@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { formatMoney, FREE_SHIPPING_THRESHOLD_CENTS } from "@/lib/money";
 
 import { Badge } from "@/components/ui/badge";
+import { AddToCart } from "@/features/cart/components/add-to-cart";
 import { StockBadge } from "@/features/catalog/components/stock-badge";
 import { getProductBySlug } from "@/server/services/catalog.service";
 
@@ -78,7 +79,13 @@ export default async function ProductDetailPage({ params }: ProductPageProps) {
             )}
           </div>
 
-          {/* Add-to-cart arrives with the cart milestone (M6). */}
+          <div className="mt-2">
+            <AddToCart
+              productId={product.id}
+              productName={product.name}
+              stockQuantity={product.stockQuantity}
+            />
+          </div>
         </div>
       </div>
     </div>

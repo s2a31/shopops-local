@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full font-sans antialiased">
       <body className="flex min-h-full flex-col">
-        {children}
+        <QueryProvider>{children}</QueryProvider>
         <Toaster position="top-center" />
       </body>
     </html>

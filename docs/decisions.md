@@ -75,6 +75,27 @@ Additional M3 decisions:
 | happy-dom                   | 20.10.6 | Component-test DOM environment          |
 | @vitejs/plugin-react        | 6.0.3   | JSX transform for the component project |
 
+## Pinned at M6 (cart)
+
+| Tool / library        | Version | Notes                                       |
+| --------------------- | ------- | ------------------------------------------- |
+| zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
+| @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
+
+Additional M6 decisions:
+
+- **The cart stores only `{ productId, quantity }`** in localStorage. Prices, names, and stock
+  always come from `POST /api/cart/validate`, so stale-price bugs are structurally impossible
+  and the response includes per-line issues (MISSING / INACTIVE / OUT_OF_STOCK /
+  INSUFFICIENT_STOCK) plus canonical totals.
+- **Persisted state is untrusted**: localStorage contents pass through a sanitizer on hydrate
+  (malformed entries dropped, duplicates merged, quantities clamped, line cap enforced).
+- **Hydration-safe rendering** via `useSyncExternalStore` (server snapshot false → client
+  true); cart-derived UI renders only after hydration, avoiding React mismatches. The newer
+  `react-hooks/set-state-in-effect` lint rule pushed us to this pattern over a mount effect.
+- **Validation endpoint always returns 200** — line problems are data for the UI, not
+  transport errors; the Origin check still applies (POST).
+
 Additional M5 decisions:
 
 - **Catalogue filtering is a plain GET form + URL state** — server-rendered, shareable,

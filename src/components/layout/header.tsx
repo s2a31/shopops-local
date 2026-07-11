@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/auth/guards";
 
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/layout/user-menu";
+import { CartButton } from "@/features/cart/components/cart-button";
+import { CartDrawer } from "@/features/cart/components/cart-drawer";
 
 export async function Header() {
   const user = await getCurrentUser();
@@ -40,6 +42,7 @@ export async function Header() {
         </div>
 
         <div className="flex items-center gap-2">
+          <CartButton />
           {user ? (
             <UserMenu name={user.name} />
           ) : (
@@ -49,6 +52,7 @@ export async function Header() {
           )}
         </div>
       </div>
+      <CartDrawer />
     </header>
   );
 }
