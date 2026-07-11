@@ -82,6 +82,18 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M9 (admin shell + dashboard) — no new dependencies
+
+Additional M9 decisions:
+
+- **Dashboard revenue = all non-cancelled orders of the last 30 days** (COD counts when
+  placed). This is demo revenue for a learning dashboard, not accounting; the definition
+  is stated on the dashboard card itself.
+- **Top products ignore cancelled orders** and rank by units sold (Prisma `groupBy` over
+  order items with a relation filter).
+- **Low-stock query compares columns** (`stockQuantity <= lowStockThreshold`) using Prisma
+  field references — no threshold duplication in application code.
+
 ## M8 (customer orders) — no new dependencies
 
 Additional M8 decisions:
