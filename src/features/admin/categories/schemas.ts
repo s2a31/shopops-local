@@ -22,3 +22,23 @@ export const adminCategoryUpdateSchema = categoryFields.partial();
 
 export type AdminCategoryCreateInput = z.infer<typeof adminCategoryCreateSchema>;
 export type AdminCategoryUpdateInput = z.infer<typeof adminCategoryUpdateSchema>;
+
+/** What the category dialog form validates; empty optional fields mean "not provided". */
+export const adminCategoryFormSchema = z.object({
+  name: categoryFields.shape.name,
+  slug: z
+    .string()
+    .trim()
+    .regex(/^$|^[a-z0-9]+(-[a-z0-9]+)*$/, "Use lowercase letters, digits and hyphens.")
+    .max(80)
+    .transform((v) => (v === "" ? undefined : v)),
+  description: z
+    .string()
+    .trim()
+    .max(500)
+    .transform((v) => (v ? v : undefined)),
+  sortOrder: z.coerce.number().int().min(0, "Cannot be negative.").max(1_000),
+});
+
+export type AdminCategoryFormInput = z.input<typeof adminCategoryFormSchema>;
+export type AdminCategoryFormValues = z.output<typeof adminCategoryFormSchema>;
