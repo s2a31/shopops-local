@@ -82,6 +82,22 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M11 (admin inventory) — no new dependencies
+
+Additional M11 decisions:
+
+- **Adjustments use the same guarded-update pattern as checkout**: a single
+  `updateMany` with `stockQuantity >= -delta` in the WHERE clause applies the change
+  atomically and refuses to go below zero (409 with the remaining quantity in
+  `details`); the ledger row is written in the same transaction.
+- **Admins may only pick RESTOCK or MANUAL_CORRECTION** — the other ledger reasons
+  (INITIAL_STOCK, ORDER_PLACED, ORDER_CANCELLED) are written exclusively by services.
+- **The audit log shows attribution**: the acting admin's name for manual changes,
+  "System — SO-…" for order-driven ones. History can be scoped to one product from
+  its stock row.
+- **Sum-of-deltas invariant is asserted in an integration test**: after any sequence
+  of adjustments, `stockQuantity` equals the sum of the product's ledger deltas.
+
 ## M10 (admin catalogue) — no new dependencies
 
 Additional M10 decisions:
