@@ -21,11 +21,26 @@ pnpm install
 cp .env.example .env   # local-only defaults; no real secrets anywhere
 pnpm db:up             # start PostgreSQL in Docker (waits for healthy)
 pnpm db:migrate        # apply database migrations
+pnpm db:seed           # load the demo catalogue, accounts, and orders
 pnpm dev
 ```
 
-The app runs at http://localhost:3000. Seed data and demo credentials will be documented here
-when that milestone lands.
+The app runs at http://localhost:3000.
+
+## Demo accounts (local demonstration only)
+
+> These are **fictional local demo credentials**, seeded into your local database on purpose and
+> published in this README on purpose. They are not secrets and grant access to nothing outside
+> your own machine.
+
+| Role          | Email                   | Password           |
+| ------------- | ----------------------- | ------------------ |
+| Administrator | `admin@shopops.local`   | `DemoAdmin123!`    |
+| Customer      | `customer@shopops.local`| `DemoCustomer123!` |
+
+The seed also creates four more demo customers (`mia`, `daniel`, `zoe`, `adam`
+`@shopops.local`, password `DemoCustomer123!`) with order history so the admin
+screens have realistic data.
 
 ## Commands
 
