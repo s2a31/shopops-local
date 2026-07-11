@@ -1,0 +1,23 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: shopops-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: shopops
+      # Obviously-local development password; never used outside localhost.
+      POSTGRES_PASSWORD: shopops_local_dev
+      POSTGRES_DB: shopops
+    volumes:
+      - shopops_pgdata:/var/lib/postgresql/data
+      # Creates the shopops_test database on first startup of a fresh volume.
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shopops -d shopops"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  shopops_pgdata:
