@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
@@ -16,6 +17,18 @@ export default defineConfig({
           name: "unit",
           include: ["src/**/*.test.ts"],
           environment: "node",
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: { alias: { "@": src } },
+        test: {
+          name: "component",
+          include: ["src/**/*.test.tsx"],
+          environment: "happy-dom",
+          // Testing Library's auto-cleanup hooks into the global afterEach.
+          globals: true,
+          setupFiles: ["./tests/component/setup.ts"],
         },
       },
       {
