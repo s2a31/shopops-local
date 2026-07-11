@@ -82,6 +82,26 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M7 (checkout) — no new dependencies
+
+Additional M7 decisions:
+
+- **Declined simulated payments resolve before the transaction opens** — a decline throws
+  before any database write, so there is no order row, no stock movement, and nothing to
+  clean up.
+- **Stock is taken with conditional decrements in deterministic productId order**
+  (`UPDATE … WHERE "stockQuantity" >= qty` on sorted lines). Concurrent checkouts cannot
+  deadlock, and when two buyers race for the last unit exactly one succeeds — covered by a
+  dedicated race integration test.
+- **Checkout prefills the shipping form from the customer's most recent order**, the
+  documented v1 substitute for an address book.
+- **Route-handler tests stub the `next/headers` cookie store** (and neutralize React
+  `cache`) because invoking a handler directly provides no Next request scope. Wire-level
+  cookie tests over real HTTP arrive with the M14 api project.
+- **An untouched radio group reports `null` in react-hook-form**, so the checkout form
+  schema treats a null scenario as "not chosen yet" and shows the friendly refine message
+  instead of a type error.
+
 Additional M6 decisions:
 
 - **The cart stores only `{ productId, quantity }`** in localStorage. Prices, names, and stock
