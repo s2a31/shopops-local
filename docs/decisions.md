@@ -82,6 +82,28 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M13 (a11y & polish pass) — no new dependencies
+
+Additional M13 decisions:
+
+- **Contrast was audited with computed styles in the browser** (canvas-normalized
+  colors, WCAG relative-luminance math) across the key pages; automated axe scans
+  arrive with the Playwright setup in M14. One systemic failure was found and fixed:
+  the destructive badge ("Out of stock", "Cancelled") was 3.97:1 — its text now uses
+  the darker `red-700` on the tinted background (5.3:1).
+- **`motion-reduce:` variants cover every animated primitive** (skeleton pulse,
+  dialog/sheet/select/dropdown enter-exit, toast spinner); sonner itself already
+  respects `prefers-reduced-motion`.
+- **Every route group has a `loading.tsx`** pairing skeletons with a visually hidden
+  `role="status"` announcement and `aria-busy`.
+- **The storefront header goes icon-only below `sm`** (cart and account keep their
+  accessible names via `sr-only` text) instead of adding a hamburger menu — with two
+  nav links a disclosure menu would cost more a11y surface than it saves.
+- **The M3 auth forms were aligned with the M4 UI kit** (Input/Label/Button replace
+  raw zinc-styled elements), which also gave them the kit's `aria-invalid` styling.
+- Disabled pagination placeholders are `aria-hidden` and exempt from contrast rules
+  by WCAG 1.4.3 (inactive controls); real pagination links are unaffected.
+
 ## M12 (admin orders + customers) — no new dependencies
 
 Additional M12 decisions:
