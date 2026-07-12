@@ -82,6 +82,24 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## M12 (admin orders + customers) — no new dependencies
+
+Additional M12 decisions:
+
+- **One status machine, one module** (`src/features/orders/transitions.ts`): the
+  transition table drives both the server-side validation in `admin.service` and the
+  options offered by the admin UI control, so the client can never offer a move the
+  server would reject. Customer cancellation (PLACED only) stays separately enforced
+  in `order.service`.
+- **Status flips are conditional updates** (`updateMany` guarded by the previously
+  read status), so a concurrent admin transition or customer cancellation loses
+  cleanly with a 409 instead of double-applying side effects — stock can never be
+  restored twice for one cancellation.
+- **Payment side effects ride the same transaction**: delivering a cash-on-delivery
+  order marks its payment PAID; cancelling a paid card order flags it REFUNDED.
+  Admin cancellation restores stock with `ORDER_CANCELLED` ledger rows in the same
+  deterministic productId order checkout uses.
+
 ## M11 (admin inventory) — no new dependencies
 
 Additional M11 decisions:

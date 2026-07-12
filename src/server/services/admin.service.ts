@@ -1,4 +1,4 @@
-import { InventoryReason, OrderStatus, Prisma } from "@prisma/client";
+import { InventoryReason, OrderStatus, PaymentMethod, PaymentStatus, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { AppError } from "@/lib/errors";
@@ -8,11 +8,13 @@ import type {
   AdminCategoryCreateInput,
   AdminCategoryUpdateInput,
 } from "@/features/admin/categories/schemas";
+import type { AdminOrderFilters } from "@/features/admin/orders/schemas";
 import type {
   AdminProductCreateInput,
   AdminProductFilters,
   AdminProductUpdateInput,
 } from "@/features/admin/products/schemas";
+import { canTransition } from "@/features/orders/transitions";
 
 /**
  * Admin dashboard aggregates. Revenue counts every non-cancelled order of the
@@ -346,4 +348,176 @@ export async function updateCategory(
     }
     throw error;
   }
+}
+
+/* --------------------------------- orders -------------------------------- */
+
+export const ADMIN_ORDERS_PAGE_SIZE = 12;
+
+const ADMIN_ORDER_LIST_SELECT = {
+  id: true,
+  orderNumber: true,
+  status: true,
+  paymentMethod: true,
+  paymentStatus: true,
+  totalCents: true,
+  createdAt: true,
+  user: { select: { id: true, name: true, email: true } },
+  _count: { select: { items: true } },
+} satisfies Prisma.OrderSelect;
+
+export type AdminOrderListItem = Prisma.OrderGetPayload<{
+  select: typeof ADMIN_ORDER_LIST_SELECT;
+}>;
+
+export interface AdminOrderListResult {
+  items: AdminOrderListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** Admin order table: every order, filterable by status and order number / email. */
+export async function listAdminOrders(filters: AdminOrderFilters): Promise<AdminOrderListResult> {
+  const where: Prisma.OrderWhereInput = {
+    ...(filters.status && { status: filters.status }),
+    ...(filters.q && {
+      OR: [
+        { orderNumber: { contains: filters.q, mode: "insensitive" } },
+        { user: { email: { contains: filters.q, mode: "insensitive" } } },
+      ],
+    }),
+  };
+
+  const total = await prisma.order.count({ where });
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_ORDERS_PAGE_SIZE));
+  const page = Math.min(filters.page, totalPages);
+
+  const items = await prisma.order.findMany({
+    where,
+    select: ADMIN_ORDER_LIST_SELECT,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    skip: (page - 1) * ADMIN_ORDERS_PAGE_SIZE,
+    take: ADMIN_ORDERS_PAGE_SIZE,
+  });
+
+  return { items, total, page, pageSize: ADMIN_ORDERS_PAGE_SIZE, totalPages };
+}
+
+const ADMIN_ORDER_DETAIL_SELECT = {
+  id: true,
+  orderNumber: true,
+  status: true,
+  paymentMethod: true,
+  paymentStatus: true,
+  paymentRef: true,
+  subtotalCents: true,
+  shippingCents: true,
+  totalCents: true,
+  shippingName: true,
+  shippingPhone: true,
+  shippingStreet: true,
+  shippingCity: true,
+  shippingPostalCode: true,
+  shippingCountry: true,
+  cancelledAt: true,
+  createdAt: true,
+  user: { select: { id: true, name: true, email: true } },
+  items: {
+    orderBy: { productName: "asc" as const },
+    select: {
+      id: true,
+      productId: true,
+      productName: true,
+      unitPriceCents: true,
+      quantity: true,
+      lineTotalCents: true,
+      product: { select: { slug: true, isActive: true } },
+    },
+  },
+} satisfies Prisma.OrderSelect;
+
+export type AdminOrderDetail = Prisma.OrderGetPayload<{
+  select: typeof ADMIN_ORDER_DETAIL_SELECT;
+}>;
+
+export async function getAdminOrder(id: string): Promise<AdminOrderDetail | null> {
+  return prisma.order.findUnique({ where: { id }, select: ADMIN_ORDER_DETAIL_SELECT });
+}
+
+/**
+ * Applies one admin status transition, validated against the machine in
+ * features/orders/transitions. The status flip is a conditional update, so a
+ * concurrent transition loses cleanly (409). Cancelling restores stock with
+ * ORDER_CANCELLED ledger rows and refunds a paid card; delivering a COD order
+ * marks its payment PAID.
+ */
+export async function updateOrderStatus(
+  orderId: string,
+  nextStatus: OrderStatus,
+): Promise<AdminOrderDetail> {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        status: true,
+        paymentMethod: true,
+        paymentStatus: true,
+        items: { select: { productId: true, quantity: true } },
+      },
+    });
+    if (!order) {
+      throw new AppError("NOT_FOUND", "Order not found.");
+    }
+    if (!canTransition(order.status, nextStatus)) {
+      throw new AppError("CONFLICT", `An order cannot move from ${order.status} to ${nextStatus}.`);
+    }
+
+    const becomesPaid =
+      nextStatus === OrderStatus.DELIVERED &&
+      order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY &&
+      order.paymentStatus === PaymentStatus.PENDING;
+    const becomesRefunded =
+      nextStatus === OrderStatus.CANCELLED && order.paymentStatus === PaymentStatus.PAID;
+
+    const updated = await tx.order.updateMany({
+      where: { id: order.id, status: order.status },
+      data: {
+        status: nextStatus,
+        ...(nextStatus === OrderStatus.CANCELLED && { cancelledAt: new Date() }),
+        ...(becomesPaid && { paymentStatus: PaymentStatus.PAID }),
+        ...(becomesRefunded && { paymentStatus: PaymentStatus.REFUNDED }),
+      },
+    });
+    if (updated.count === 0) {
+      throw new AppError("CONFLICT", "The order changed underneath you — reload and retry.");
+    }
+
+    if (nextStatus === OrderStatus.CANCELLED) {
+      // Same deterministic productId ordering as checkout and customer
+      // cancellation — consistent lock order prevents deadlocks.
+      const lines = [...order.items].sort((a, b) => (a.productId < b.productId ? -1 : 1));
+      for (const line of lines) {
+        await tx.product.update({
+          where: { id: line.productId },
+          data: { stockQuantity: { increment: line.quantity } },
+        });
+      }
+      await tx.inventoryAdjustment.createMany({
+        data: lines.map((line) => ({
+          productId: line.productId,
+          delta: line.quantity,
+          reason: InventoryReason.ORDER_CANCELLED,
+          orderId: order.id,
+        })),
+      });
+    }
+
+    return tx.order.findUniqueOrThrow({
+      where: { id: order.id },
+      select: ADMIN_ORDER_DETAIL_SELECT,
+    });
+  });
 }
