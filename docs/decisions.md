@@ -82,6 +82,36 @@ Additional M3 decisions:
 | zustand               | 5.0.14  | Cart lines + drawer-open flag, nothing else |
 | @tanstack/react-query | 5.101.2 | Cart validation query; admin tables from M9 |
 
+## Pinned at M14 (E2E + accessibility scans)
+
+| Tool / library       | Version | Notes                                     |
+| -------------------- | ------- | ----------------------------------------- |
+| @playwright/test     | 1.61.1  | Chromium only by default, 1 worker        |
+| @axe-core/playwright | 4.12.1  | Serious/critical violations fail the runs |
+
+Additional M14 decisions:
+
+- **Sessions come from a `setup` project, not per-spec logins**: `auth.setup.ts` signs the
+  demo customer and admin in once through the API and saves storage states under
+  `e2e/.auth/` (gitignored). Specs reuse them, staying far below the login rate limiter
+  even with CI retries; specs whose subject is authentication drive the login UI.
+- **The suite always runs against `shopops_test` on port 3100**: the Playwright config
+  loads `.env.test`, the global setup reseeds through `scripts/reset-test-db.ts`, and that
+  script refuses to run against any database whose URL does not contain `shopops_test`.
+- **The mobile project is Chromium with the iPhone-14 viewport** — the device preset
+  defaults to WebKit, which is deliberately not installed (`browserName` overrides it).
+- **Foreign order ids are asserted via the designed 404 page, not the HTTP status**:
+  streaming (`loading.tsx`) sends headers before `notFound()` resolves, so the page
+  status is 200 by design; the wire-level 404 stays covered by the HTTP API tests.
+- **Insufficient stock is covered as two behaviors**: the cart-validation guard that
+  disables "Place order" for a stale over-quantity cart, and the mid-checkout race
+  (stock drained after the page loads) that exercises the transactional 409 path
+  end-to-end. Both pin fixture stock through the audited admin adjustment API, so the
+  specs are self-healing across retries.
+- **Locator lessons baked into the specs**: `getByText(string)` matches substrings
+  case-insensitively (scope to roles or use `exact: true`), and Next's route announcer
+  is also `role="alert"`, so alert assertions always filter by content.
+
 ## M13 (a11y & polish pass) — no new dependencies
 
 Additional M13 decisions:

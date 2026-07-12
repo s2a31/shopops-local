@@ -20,7 +20,11 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:reset": "pnpm db:destroy && pnpm db:up && pnpm db:migrate && pnpm db:seed",
-    "images:generate": "tsx scripts/generate-product-images.ts"
+    "images:generate": "tsx scripts/generate-product-images.ts",
+    "db:test:reset": "tsx scripts/reset-test-db.ts",
+    "test:e2e": "pnpm build && playwright test",
+    "test:e2e:critical": "pnpm build && playwright test --grep @critical",
+    "test:e2e:report": "playwright show-report"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -46,6 +50,8 @@
     "zustand": "5.0.14"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
     "@tailwindcss/postcss": "4.3.2",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
