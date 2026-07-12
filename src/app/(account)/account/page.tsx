@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/guards";
 
@@ -9,8 +10,10 @@ import { LogoutButton } from "@/features/auth/components/logout-button";
 export const metadata: Metadata = { title: "My account" };
 
 export default async function AccountPage() {
-  // The layout guard guarantees a user here.
-  const user = (await getCurrentUser())!;
+  // The layout redirects guests too, but layouts and pages render in
+  // parallel — the page must handle null itself, never assert it away.
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:px-6">

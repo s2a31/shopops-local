@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/lib/auth/guards";
 import { formatDate } from "@/lib/dates";
@@ -19,8 +20,10 @@ export default async function OrderHistoryPage({
 }: {
   searchParams: Promise<{ page?: string }>;
 }) {
-  // The account layout guard guarantees a user here.
-  const user = (await getCurrentUser())!;
+  // The layout redirects guests too, but layouts and pages render in
+  // parallel — the page must handle null itself, never assert it away.
+  const user = await getCurrentUser();
+  if (!user) redirect("/login?next=/account");
   const { page: rawPage } = await searchParams;
   const result = await listOrdersForUser(user.id, orderPageSchema.parse(rawPage));
 
