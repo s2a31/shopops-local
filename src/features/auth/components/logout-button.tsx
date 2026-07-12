@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { apiFetch } from "@/lib/api-client";
 
+import { Button } from "@/components/ui/button";
+
 export function LogoutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -21,13 +23,8 @@ export function LogoutButton() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleLogout}
-      disabled={pending}
-      className="rounded-md border border-zinc-300 px-4 py-2 font-medium disabled:opacity-60"
-    >
+    <Button type="button" variant="outline" onClick={handleLogout} disabled={pending}>
       {pending ? "Signing out…" : "Sign out"}
-    </button>
+    </Button>
   );
 }

@@ -6,6 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { ApiError, apiFetch } from "@/lib/api-client";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
 
 export function LoginForm({ nextPath }: { nextPath: string }) {
@@ -32,56 +36,46 @@ export function LoginForm({ nextPath }: { nextPath: string }) {
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <label htmlFor="login-email" className="text-sm font-medium">
-          Email
-        </label>
-        <input
+        <Label htmlFor="login-email">Email</Label>
+        <Input
           id="login-email"
           type="email"
           autoComplete="email"
           aria-invalid={errors.email ? true : undefined}
           aria-describedby={errors.email ? "login-email-error" : undefined}
-          className="rounded-md border border-zinc-300 px-3 py-2"
           {...register("email")}
         />
         {errors.email && (
-          <p id="login-email-error" className="text-sm text-red-700">
+          <p id="login-email-error" className="text-sm text-destructive">
             {errors.email.message}
           </p>
         )}
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="login-password" className="text-sm font-medium">
-          Password
-        </label>
-        <input
+        <Label htmlFor="login-password">Password</Label>
+        <Input
           id="login-password"
           type="password"
           autoComplete="current-password"
           aria-invalid={errors.password ? true : undefined}
           aria-describedby={errors.password ? "login-password-error" : undefined}
-          className="rounded-md border border-zinc-300 px-3 py-2"
           {...register("password")}
         />
         {errors.password && (
-          <p id="login-password-error" className="text-sm text-red-700">
+          <p id="login-password-error" className="text-sm text-destructive">
             {errors.password.message}
           </p>
         )}
       </div>
 
       <div aria-live="polite">
-        {errors.root && <p className="text-sm text-red-700">{errors.root.message}</p>}
+        {errors.root && <p className="text-sm text-destructive">{errors.root.message}</p>}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded-md bg-zinc-900 px-4 py-2 font-medium text-white disabled:opacity-60"
-      >
+      <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Signing in…" : "Sign in"}
-      </button>
+      </Button>
     </form>
   );
 }

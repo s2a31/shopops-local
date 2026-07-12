@@ -27,7 +27,7 @@ export function CartButton() {
       onClick={() => setDrawerOpen(true)}
     >
       <ShoppingCart aria-hidden="true" className="size-4" />
-      Cart
+      <span className="max-sm:sr-only">Cart</span>
       {mounted && count > 0 && (
         <span
           aria-hidden="true"

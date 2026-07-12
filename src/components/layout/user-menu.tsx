@@ -33,7 +33,7 @@ export function UserMenu({ name }: { name: string }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="gap-2">
           <UserRound aria-hidden="true" className="size-4" />
-          Account
+          <span className="max-sm:sr-only">Account</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
