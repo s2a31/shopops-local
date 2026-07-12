@@ -8,6 +8,7 @@ import type {
   AdminCategoryCreateInput,
   AdminCategoryUpdateInput,
 } from "@/features/admin/categories/schemas";
+import type { AdminCustomerFilters } from "@/features/admin/customers/schemas";
 import type { AdminOrderFilters } from "@/features/admin/orders/schemas";
 import type {
   AdminProductCreateInput,
@@ -520,4 +521,73 @@ export async function updateOrderStatus(
       select: ADMIN_ORDER_DETAIL_SELECT,
     });
   });
+}
+
+/* ------------------------------- customers ------------------------------- */
+
+export const ADMIN_CUSTOMERS_PAGE_SIZE = 12;
+
+export interface AdminCustomerListItem {
+  id: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  orderCount: number;
+  /** Lifetime spend over non-cancelled orders. */
+  totalSpentCents: number;
+}
+
+export interface AdminCustomerListResult {
+  items: AdminCustomerListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/** Customer directory — non-sensitive fields only; password hashes never leave the DB. */
+export async function listAdminCustomers(
+  filters: AdminCustomerFilters,
+): Promise<AdminCustomerListResult> {
+  const where: Prisma.UserWhereInput = {
+    role: "CUSTOMER",
+    ...(filters.q && {
+      OR: [
+        { name: { contains: filters.q, mode: "insensitive" } },
+        { email: { contains: filters.q, mode: "insensitive" } },
+      ],
+    }),
+  };
+
+  const total = await prisma.user.count({ where });
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_CUSTOMERS_PAGE_SIZE));
+  const page = Math.min(filters.page, totalPages);
+
+  const users = await prisma.user.findMany({
+    where,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    skip: (page - 1) * ADMIN_CUSTOMERS_PAGE_SIZE,
+    take: ADMIN_CUSTOMERS_PAGE_SIZE,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      orders: { select: { totalCents: true, status: true } },
+    },
+  });
+
+  return {
+    items: users.map(({ orders, ...user }) => ({
+      ...user,
+      orderCount: orders.length,
+      totalSpentCents: orders
+        .filter((order) => order.status !== OrderStatus.CANCELLED)
+        .reduce((sum, order) => sum + order.totalCents, 0),
+    })),
+    total,
+    page,
+    pageSize: ADMIN_CUSTOMERS_PAGE_SIZE,
+    totalPages,
+  };
 }

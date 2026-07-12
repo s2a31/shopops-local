@@ -99,6 +99,10 @@ Additional M12 decisions:
   order marks its payment PAID; cancelling a paid card order flags it REFUNDED.
   Admin cancellation restores stock with `ORDER_CANCELLED` ledger rows in the same
   deterministic productId order checkout uses.
+- **Customer aggregates exclude cancelled orders**: `totalSpentCents` sums only
+  non-cancelled orders (in integer cents); `orderCount` counts every order. The
+  service returns an explicit non-sensitive field list — password hashes never leave
+  the database layer.
 
 ## M11 (admin inventory) — no new dependencies
 
