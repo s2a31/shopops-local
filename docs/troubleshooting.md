@@ -31,7 +31,7 @@ The suite is Chromium-only by design — the mobile project also runs on Chromiu
 
 ## E2E failures with the app seemingly not updated
 
-`pnpm test:e2e` rebuilds first, but a manually started `next start` on port 3100 is **reused**
+`pnpm test:e2e` rebuilds first, but a manually started `pnpm start` on port 3100 is **reused**
 locally (`reuseExistingServer`). Stop stray servers on 3100 if results look stale:
 `lsof -ti :3100 | xargs kill`.
 

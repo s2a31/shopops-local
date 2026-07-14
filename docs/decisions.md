@@ -112,6 +112,22 @@ Additional M14 decisions:
   case-insensitively (scope to roles or use `exact: true`), and Next's route announcer
   is also `role="alert"`, so alert assertions always filter by content.
 
+## M16 (production container) — no new application dependencies
+
+- **Next.js standalone output** supplies the production server and its traced runtime
+  dependencies; the image copies `public/` and `.next/static` separately because Next does not
+  include them in `.next/standalone`.
+- **The base image is pinned to Node 22.21.0 on Debian Bookworm slim**, including the verified
+  multi-architecture digest. Debian avoids mixing Alpine's musl runtime with the native Prisma,
+  Argon2, and image-optimization binaries; OpenSSL and CA certificates are installed explicitly.
+- **Build-time environment values are inert placeholders** used only by fail-fast validation.
+  `DATABASE_URL` and `APP_URL` are mandatory runtime configuration and are never copied from a
+  repository `.env` file.
+- **The container runs as non-root and never runs migrations automatically**. Schema migration,
+  reverse proxy/TLS, registry publishing, and orchestration remain deployment responsibilities.
+- **CI builds the Docker image instead of repeating a host `next build`** in the integration job;
+  the image's builder stage is now the production-build gate.
+
 ## M13 (a11y & polish pass) — no new dependencies
 
 Additional M13 decisions:

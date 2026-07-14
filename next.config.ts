@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
     // The generic admin-gallery artwork is locally generated SVG committed to
     // this repo, so serving it through next/image is safe with a restrictive

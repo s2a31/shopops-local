@@ -39,6 +39,33 @@ pnpm dev
 
 The app runs at http://localhost:3000.
 
+## Production container (optional)
+
+The normal development loop above is unchanged: Next.js runs on the host and Compose runs only
+PostgreSQL. To build the standalone production image:
+
+```bash
+docker build --tag shopops-local:prod .
+```
+
+Apply migrations before starting a new image; the app container never changes the schema on
+startup. On macOS, the existing host-published PostgreSQL service can be reached from the
+container through `host.docker.internal`:
+
+```bash
+pnpm exec prisma migrate deploy
+docker run --rm --name shopops-app \
+  --publish 3000:3000 \
+  --env DATABASE_URL=postgresql://shopops:shopops_local_dev@host.docker.internal:5432/shopops \
+  --env APP_URL=http://localhost:3000 \
+  shopops-local:prod
+```
+
+`APP_URL` must exactly match the origin used in the browser or mutating requests will be rejected
+by the Origin/CSRF guard. For a real deployment, provide both variables through the platform's
+secret/configuration system. Registry publishing, automatic migrations, reverse proxy, TLS, and
+multi-container orchestration are deliberately outside M16.
+
 ## Demo accounts (local demonstration only)
 
 > These are **fictional local demo credentials**, seeded into your local database on purpose
@@ -63,7 +90,7 @@ nothing real can be typed in.
 | ------------------------ | --------------------------------------------- |
 | `pnpm dev`               | Start the development server                  |
 | `pnpm build`             | Production build                              |
-| `pnpm start`             | Serve the production build                    |
+| `pnpm start`             | Serve the standalone production build         |
 | `pnpm lint`              | ESLint                                        |
 | `pnpm format`            | Format with Prettier                          |
 | `pnpm format:check`      | Verify formatting                             |

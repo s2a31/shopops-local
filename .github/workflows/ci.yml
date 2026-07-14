@@ -52,8 +52,8 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      # The vitest integration project loads .env.test itself; the build needs
-      # the same obviously-local values for the env validation module.
+      # Explicitly match the integration suite's isolated test DB and origin;
+      # .env.test contains the same obviously-local values.
       DATABASE_URL: postgresql://shopops:shopops_local_dev@localhost:5432/shopops_test
       APP_URL: http://localhost:3100
     steps:
@@ -69,7 +69,9 @@ jobs:
       # Service-layer + route-handler tests against real Postgres (the global
       # setup applies migrations and refuses non-shopops_test databases).
       - run: pnpm test:integration
-      - run: pnpm build
+      # The production image performs `next build` in its builder stage, so this
+      # continuously verifies the exact artifact that would be deployed.
+      - run: docker build --tag shopops-local:ci .
 
   e2e-critical:
     name: Playwright @critical subset

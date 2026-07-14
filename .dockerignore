@@ -1,0 +1,62 @@
+# Source-control and local agent metadata
+.git/
+.github/
+.claude/
+.codex/
+AGENTS.md
+CLAUDE.md
+
+# Host dependencies and build output
+node_modules/
+.pnpm-store/
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment files never enter the build context
+.env
+.env.*
+.env*
+
+# Tests and generated reports
+e2e/
+tests/
+**/*.test.ts
+**/*.test.tsx
+coverage/
+playwright-report/
+test-results/
+vitest.config.ts
+playwright.config.ts
+
+# Development, database-management, and documentation assets
+docs/
+scripts/*
+!scripts/prepare-standalone.mjs
+docker/
+prisma/migrations/
+prisma/seed.ts
+prisma/seed-data.ts
+README.md
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+components.json
+eslint.config.mjs
+prettier.config.mjs
+.prettierignore
+.editorconfig
+
+# Editor, operating-system, and log noise
+.vscode/
+.idea/
+.DS_Store
+**/.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

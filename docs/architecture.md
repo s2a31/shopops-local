@@ -4,6 +4,19 @@ ShopOps Local is a **modular monolith**: one Next.js (App Router) process on the
 PostgreSQL container. Everything essential runs offline after `pnpm install` and a single image
 pull — no paid services, cloud accounts, or API keys.
 
+## Production container
+
+The optional production artifact is a multi-stage Docker image built from Next.js standalone
+output. Its runtime stage contains only the traced server files, `public/`, and `.next/static`,
+runs as the non-root `node` user, and listens on `0.0.0.0:3000`. PostgreSQL remains an external
+dependency supplied through `DATABASE_URL`; `APP_URL` must be the exact browser-visible origin
+because mutating requests validate it.
+
+Database migrations are deliberately not run by the app container. A deployment applies
+`prisma migrate deploy` before starting the new image, keeping schema changes explicit and
+separate from application startup. The development topology is unchanged: Next.js runs on the
+host and `docker-compose.yml` starts only PostgreSQL.
+
 ## Layering
 
 ```
