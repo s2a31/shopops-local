@@ -1,12 +1,12 @@
 /**
- * Generates the committed product artwork under public/images/products/.
+ * Maintains the committed image set under public/images/products/.
  *
- * Every image is created locally by this script — nothing is downloaded, so there
- * is no third-party licensing to worry about. The compositions are deterministic
- * (derived from the product slug), so re-running the script reproduces identical
- * files. Run with: pnpm images:generate
+ * Product photos are generated, reviewed, and committed as WebP files. This script
+ * verifies that the complete photo set is present and regenerates only the generic
+ * admin-gallery artwork, whose compositions are deterministic. Run with:
+ * pnpm images:generate
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { gallerySlugs, seedProducts } from "../prisma/seed-data";
@@ -23,7 +23,7 @@ function hashSlug(slug: string): number {
   return hash >>> 0;
 }
 
-function svgFor(slug: string): string {
+function gallerySvgFor(slug: string): string {
   const h = hashSlug(slug);
   const hue = h % 360;
   const hue2 = (hue + 40 + (h % 60)) % 360;
@@ -62,9 +62,16 @@ function svgFor(slug: string): string {
 
 mkdirSync(OUT_DIR, { recursive: true });
 
-const slugs = [...seedProducts.map((p) => p.slug), ...gallerySlugs];
-for (const slug of slugs) {
-  writeFileSync(join(OUT_DIR, `${slug}.svg`), svgFor(slug));
+const missingPhotos = seedProducts.filter(({ slug }) => !existsSync(join(OUT_DIR, `${slug}.webp`)));
+
+if (missingPhotos.length > 0) {
+  throw new Error(`Missing product photos: ${missingPhotos.map(({ slug }) => slug).join(", ")}`);
 }
 
-console.log(`Generated ${slugs.length} SVG images in ${OUT_DIR}`);
+for (const slug of gallerySlugs) {
+  writeFileSync(join(OUT_DIR, `${slug}.svg`), gallerySvgFor(slug));
+}
+
+console.log(
+  `Verified ${seedProducts.length} product photos and generated ${gallerySlugs.length} gallery images in ${OUT_DIR}`,
+);

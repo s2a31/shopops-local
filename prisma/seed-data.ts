@@ -409,9 +409,9 @@ export const gallerySlugs = [
 ];
 
 export function productImagePath(slug: string): string {
-  return `/images/products/${slug}.svg`;
+  return `/images/products/${slug}.webp`;
 }
 
 export function productImageAlt(name: string): string {
-  return `Stylized geometric artwork representing the ${name}`;
+  return `Product photograph of ${name}`;
 }
